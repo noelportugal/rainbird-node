@@ -1,0 +1,54 @@
+{
+  "name": "rainbird-node",
+  "version": "1.0.0",
+  "description": "Control a Rain Bird irrigation controller over its LNK/LNK2 WiFi module on your LAN — a small, modern, Promise-first TypeScript client with zero runtime dependencies.",
+  "type": "module",
+  "main": "./dist/index.cjs",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "require": "./dist/index.cjs"
+    }
+  },
+  "files": [
+    "dist"
+  ],
+  "engines": {
+    "node": ">=18"
+  },
+  "scripts": {
+    "build": "tsup",
+    "test": "vitest run",
+    "typecheck": "tsc --noEmit",
+    "prepublishOnly": "npm run build"
+  },
+  "keywords": [
+    "rainbird",
+    "rain bird",
+    "irrigation",
+    "sprinkler",
+    "lnk",
+    "lnk2",
+    "smart home",
+    "home automation"
+  ],
+  "author": "Noel Portugal",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/noelportugal/rainbird-node.git"
+  },
+  "homepage": "https://github.com/noelportugal/rainbird-node#readme",
+  "bugs": {
+    "url": "https://github.com/noelportugal/rainbird-node/issues"
+  },
+  "devDependencies": {
+    "@types/node": "^26.0.1",
+    "tsup": "^8.3.5",
+    "typescript": "^5.7.2",
+    "vitest": "^2.1.8"
+  }
+}
