@@ -26,6 +26,10 @@ export interface RainBirdOptions {
   password: string
   /** Per-request timeout in ms (default 20000). */
   timeoutMs?: number
+  /** Retries on a transient failure (HTTP 503 / connection blip). Default 3. */
+  maxRetries?: number
+  /** Base backoff between retries in ms (grows linearly). Default 1500. */
+  retryDelayMs?: number
   /** Optional logger for debugging the wire protocol. */
   onLog?: (level: 'debug' | 'warn' | 'error', message: string) => void
 }
@@ -66,6 +70,8 @@ export class RainBird {
   private readonly address: string
   private readonly password: string
   private readonly timeoutMs: number
+  private readonly maxRetries: number
+  private readonly retryDelayMs: number
   private readonly onLog?: RainBirdOptions['onLog']
 
   /** Discovered transport: null until the first successful request. */
@@ -79,6 +85,8 @@ export class RainBird {
     this.address = opts.address
     this.password = opts.password
     this.timeoutMs = opts.timeoutMs ?? 20000
+    this.maxRetries = opts.maxRetries ?? 3
+    this.retryDelayMs = opts.retryDelayMs ?? 1500
     this.onLog = opts.onLog
   }
 
@@ -244,7 +252,18 @@ export class RainBird {
       params: { data: body.toString('hex'), length: body.length },
     })
     const payload = this.encrypt(formatted)
-    const respBuf = await this.post(payload)
+    // Rain Bird controllers transiently return HTTP 503 when busy (and the link
+    // can blip) — retry a few times with linear backoff before giving up.
+    let respBuf: Buffer
+    for (let attempt = 0; ; attempt++) {
+      try { respBuf = await this.post(payload); break }
+      catch (e) {
+        if (attempt >= this.maxRetries || !isRetryable(e)) throw e
+        const wait = this.retryDelayMs * (attempt + 1)
+        this.log('warn', `[${this.address}] transient (${(e as Error).message}); retry ${attempt + 1}/${this.maxRetries} in ${wait}ms`)
+        await sleep(wait)
+      }
+    }
     const json = JSON.parse(this.decrypt(respBuf).replace(/[\n ]/g, ''))
     if (json?.error) throw new Error(`Rain Bird error ${json.error.code}: ${json.error.message}`)
     if (!json?.result?.data) throw new Error('Rain Bird: malformed response (no result data)')
@@ -363,5 +382,13 @@ function isConnError(e: unknown): boolean {
   const msg = e.message.toLowerCase()
   return CONN_ERR_SUBSTR.some((s) => msg.includes(s))
 }
+
+/** Transient failures worth retrying: controller-busy 503s and connection blips. */
+function isRetryable(e: unknown): boolean {
+  if (e instanceof Error && /\b(503|502|429)\b/.test(e.message)) return true
+  return isConnError(e)
+}
+
+const sleep = (ms: number) => new Promise<void>((r) => setTimeout(r, ms))
 
 export default RainBird
