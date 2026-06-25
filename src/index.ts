@@ -183,6 +183,20 @@ export class RainBird {
     await this.commandAck(Buffer.from([0x40]))
   }
 
+  /** Current rain-delay in days (0 = none). The controller suspends all automatic
+   * watering while a delay is active, decrementing it once per day. */
+  async getRainDelay(): Promise<number> {
+    const d = await this.command(Buffer.from([0x36]), 0xb6)
+    return d.readUInt16BE(1)
+  }
+
+  /** Set a rain delay (0–14 days). Suspends all scheduled watering for that many
+   * days, then auto-clears. Set `1` to skip today; `0` to cancel a delay. */
+  async setRainDelay(days: number): Promise<void> {
+    const n = Math.max(0, Math.min(14, Math.round(days)))
+    await this.commandAck(Buffer.concat([Buffer.from([0x37]), u16be(n)]))
+  }
+
   /**
    * Send a raw SIP command and get the decrypted response bytes back. Escape
    * hatch for commands this client doesn't model. `bytes` is the command body

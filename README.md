@@ -53,6 +53,8 @@ await rb.stopIrrigation()                    // stop everything
 | `runProgram(program)` | `void` | Run a stored program (0-indexed) |
 | `advanceZone()` | `void` | Next zone in sequence |
 | `stopIrrigation()` | `void` | Stop everything |
+| `getRainDelay()` | `number` | Active rain-delay in days (0 = none) |
+| `setRainDelay(days)` | `void` | Suspend all scheduled watering for N days (0–14); `1` skips today, `0` cancels |
 | `raw(bytes)` | `Buffer` | Escape hatch for unmodeled SIP commands |
 
 Commands that aren't acknowledged throw `RainBirdNakError` (with `commandType` and `code`).

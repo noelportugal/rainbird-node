@@ -1,6 +1,6 @@
 {
   "name": "rainbird-node",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "Control a Rain Bird irrigation controller over its LNK/LNK2 WiFi module on your LAN — a small, modern, Promise-first TypeScript client with zero runtime dependencies.",
   "type": "module",
   "main": "./dist/index.cjs",

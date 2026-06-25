@@ -48,6 +48,13 @@ try {
       break
     }
     case 'stop': await rb.stopIrrigation(); console.log('stopped all irrigation'); break
+    case 'delay': {
+      if (args[0] === undefined) { console.log(`rain delay (days): ${await rb.getRainDelay()}`); break }
+      const days = Number(args[0])
+      await rb.setRainDelay(days)
+      console.log(days > 0 ? `rain delay set to ${days} day(s) — watering skipped` : 'rain delay cleared')
+      break
+    }
     case 'raw': console.log(Buffer.from(await rb.raw(Buffer.from(args[0], 'hex'))).toString('hex')); break
     default:
       console.error('unknown command. see header of this file for usage.')
